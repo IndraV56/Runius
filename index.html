@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runius - Project Manager & World Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1 class="auth-logo">Runius</h1>
+                <p class="auth-subtitle">Project Manager & World Builder</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form">
+                <h2>Welcome Back</h2>
+                <form id="login-form-element">
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember-me">
+                            <span class="checkbox-custom"></span>
+                            Remember me
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                    <p>Don't have an account? <a href="#" id="show-register">Sign up</a></p>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form hidden">
+                <h2>Create Account</h2>
+                <form id="register-form-element">
+                    <div class="form-group">
+                        <label for="register-username" class="form-label">Username</label>
+                        <input type="text" id="register-username" class="form-control" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email" class="form-label">Email</label>
+                        <input type="email" id="register-email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password" class="form-label">Password</label>
+                        <input type="password" id="register-password" class="form-control" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm" class="form-label">Confirm Password</label>
+                        <input type="password" id="register-confirm" class="form-control" placeholder="Confirm your password" required>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">Create Account</button>
+                </form>
+                <div class="auth-links">
+                    <p>Already have an account? <a href="#" id="show-login">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="main-app hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-logo">Runius</h1>
+            </div>
+            <div class="header-right">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">
+                    <span class="theme-icon">🌓</span>
+                </button>
+                <div class="user-menu">
+                    <button class="user-avatar" id="user-menu-btn">
+                        <img src="/api/placeholder/32/32" alt="User avatar" id="user-avatar-img">
+                        <span id="user-name">Alex Johnson</span>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown hidden">
+                        <a href="#" data-page="settings">Settings</a>
+                        <a href="#" id="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-body">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <ul class="nav-menu">
+                    <li><a href="#" class="nav-link active" data-page="dashboard">
+                        <span class="nav-icon">📊</span>Dashboard
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="projects">
+                        <span class="nav-icon">📋</span>Projects
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="worlds">
+                        <span class="nav-icon">🌍</span>World Builder
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="settings">
+                        <span class="nav-icon">⚙️</span>Settings
+                    </a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="page-header">
+                        <h2>Dashboard</h2>
+                        <p class="welcome-message">Welcome back, <span id="welcome-user">Alex</span>!</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-projects">2</div>
+                            <div class="stat-label">Total Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="active-worlds">2</div>
+                            <div class="stat-label">Active Worlds</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="team-members">3</div>
+                            <div class="stat-label">Team Members</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-sections">
+                        <section class="dashboard-section">
+                            <div class="section-header">
+                                <h3>Recent Projects</h3>
+                                <button class="btn btn--secondary btn--sm" id="create-project-btn">New Project</button>
+                            </div>
+                            <div class="recent-projects" id="recent-projects">
+                                <!-- Projects will be loaded here -->
+                            </div>
+                        </section>
+
+                        <section class="dashboard-section">
+                            <div class="section-header">
+                                <h3>Recent Worlds</h3>
+                                <button class="btn btn--secondary btn--sm" id="create-world-btn">New World</button>
+                            </div>
+                            <div class="recent-worlds" id="recent-worlds">
+                                <!-- Worlds will be loaded here -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Projects Page -->
+                <div id="projects-page" class="page">
+                    <div class="page-header">
+                        <h2>Projects</h2>
+                        <button class="btn btn--primary" id="new-project-btn">New Project</button>
+                    </div>
+                    <div class="projects-grid" id="projects-grid">
+                        <!-- Projects will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Worlds Page -->
+                <div id="worlds-page" class="page">
+                    <div class="page-header">
+                        <h2>World Builder</h2>
+                        <button class="btn btn--primary" id="new-world-btn">New World</button>
+                    </div>
+                    <div class="worlds-grid" id="worlds-grid">
+                        <!-- Worlds will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="page-header">
+                        <h2>Settings</h2>
+                    </div>
+                    <div class="settings-content">
+                        <div class="settings-section">
+                            <h3>Profile Settings</h3>
+                            <form id="profile-form">
+                                <div class="form-group">
+                                    <label for="profile-name" class="form-label">Name</label>
+                                    <input type="text" id="profile-name" class="form-control" value="Alex Johnson">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-email" class="form-label">Email</label>
+                                    <input type="email" id="profile-email" class="form-control" value="demo@runius.com">
+                                </div>
+                                <button type="submit" class="btn btn--primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h3>Appearance</h3>
+                            <div class="setting-item">
+                                <label class="setting-label">Theme</label>
+                                <button id="settings-theme-toggle" class="btn btn--secondary">Toggle Dark Mode</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="project-modal-title">Create New Project</h3>
+                <button class="modal-close" id="project-modal-close">&times;</button>
+            </div>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-name" class="form-label">Project Name</label>
+                    <input type="text" id="project-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description" class="form-label">Description</label>
+                    <textarea id="project-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-category" class="form-label">Category</label>
+                    <select id="project-category" class="form-control">
+                        <option value="Design">Design</option>
+                        <option value="Development">Development</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Research">Research</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project-deadline" class="form-label">Deadline</label>
+                    <input type="date" id="project-deadline" class="form-control">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--outline" id="project-cancel">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="world-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="world-modal-title">Create New World</h3>
+                <button class="modal-close" id="world-modal-close">&times;</button>
+            </div>
+            <form id="world-form">
+                <div class="form-group">
+                    <label for="world-name" class="form-label">World Name</label>
+                    <input type="text" id="world-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="world-description" class="form-label">Description</label>
+                    <textarea id="world-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="world-type" class="form-label">World Type</label>
+                    <select id="world-type" class="form-control">
+                        <option value="Fantasy">Fantasy</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Modern">Modern</option>
+                        <option value="Historical">Historical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="world-size" class="form-label">Size</label>
+                    <select id="world-size" class="form-control">
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                        <option value="Continental">Continental</option>
+                        <option value="Megacity">Megacity</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--outline" id="world-cancel">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save World</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="project-detail-modal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="project-detail-title">Project Details</h3>
+                <button class="modal-close" id="project-detail-close">&times;</button>
+            </div>
+            <div class="project-detail-content">
+                <div class="project-info">
+                    <p id="project-detail-description"></p>
+                    <div class="project-meta">
+                        <span class="meta-item">Category: <span id="project-detail-category"></span></span>
+                        <span class="meta-item">Deadline: <span id="project-detail-deadline"></span></span>
+                        <span class="meta-item">Progress: <span id="project-detail-progress"></span>%</span>
+                    </div>
+                </div>
+                <div class="project-tasks">
+                    <div class="tasks-header">
+                        <h4>Tasks</h4>
+                        <button class="btn btn--sm btn--secondary" id="add-task-btn">Add Task</button>
+                    </div>
+                    <div id="project-tasks-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="world-detail-modal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="world-detail-title">World Details</h3>
+                <button class="modal-close" id="world-detail-close">&times;</button>
+            </div>
+            <div class="world-detail-tabs">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="locations">Locations</button>
+                <button class="tab-btn" data-tab="characters">Characters</button>
+                <button class="tab-btn" data-tab="timeline">Timeline</button>
+            </div>
+            <div class="world-detail-content">
+                <div id="overview-tab" class="tab-content active">
+                    <div class="world-overview" id="world-overview"></div>
+                </div>
+                <div id="locations-tab" class="tab-content">
+                    <div class="locations-header">
+                        <h4>Locations</h4>
+                        <button class="btn btn--sm btn--secondary" id="add-location-btn">Add Location</button>
+                    </div>
+                    <div id="world-locations-list"></div>
+                </div>
+                <div id="characters-tab" class="tab-content">
+                    <div class="characters-header">
+                        <h4>Characters</h4>
+                        <button class="btn btn--sm btn--secondary" id="add-character-btn">Add Character</button>
+                    </div>
+                    <div id="world-characters-list"></div>
+                </div>
+                <div id="timeline-tab" class="tab-content">
+                    <div class="timeline-header">
+                        <h4>Timeline</h4>
+                        <button class="btn btn--sm btn--secondary" id="add-timeline-btn">Add Event</button>
+                    </div>
+                    <div id="world-timeline-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
