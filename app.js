@@ -1,962 +1,950 @@
-// Runius Application JavaScript
-class RuniusApp {
-    constructor() {
-        this.currentUser = null;
-        this.currentPage = 'dashboard';
-        this.theme = 'light'; // Don't use localStorage initially to avoid sandbox issues
-        
-        // Initialize data from provided JSON
-        this.users = [
-            {
-                id: 1,
-                username: "demo_user",
-                email: "demo@runius.com",
-                password: "password123",
-                name: "Alex Johnson",
-                avatar: "/api/placeholder/40/40"
-            }
-        ];
-
-        this.projects = [
-            {
-                id: 1,
-                name: "Website Redesign",
-                description: "Complete overhaul of company website with modern design",
-                category: "Design",
-                progress: 75,
-                deadline: "2025-10-15",
-                teamMembers: ["Alex Johnson", "Sarah Smith"],
-                tasks: [
-                    {id: 1, title: "Create wireframes", completed: true},
-                    {id: 2, title: "Design homepage", completed: true},
-                    {id: 3, title: "Implement responsive layout", completed: false}
-                ],
-                createdAt: "2025-09-01"
-            },
-            {
-                id: 2,
-                name: "Mobile App Development",
-                description: "Native iOS and Android app for project management",
-                category: "Development",
-                progress: 45,
-                deadline: "2025-12-01",
-                teamMembers: ["Alex Johnson", "Mike Chen"],
-                tasks: [
-                    {id: 4, title: "UI/UX Design", completed: true},
-                    {id: 5, title: "Backend API", completed: false},
-                    {id: 6, title: "Testing", completed: false}
-                ],
-                createdAt: "2025-08-15"
-            }
-        ];
-
-        this.worlds = [
-            {
-                id: 1,
-                name: "Aethermoor",
-                description: "A mystical realm where magic and technology coexist",
-                type: "Fantasy",
-                size: "Continental",
-                climate: "Temperate",
-                population: "10 million",
-                locations: [
-                    {id: 1, name: "Crystal City", description: "The capital built around a massive crystal formation"},
-                    {id: 2, name: "Ironwood Forest", description: "Ancient forest with metal-like trees"}
-                ],
-                characters: [
-                    {id: 1, name: "Lyra Stormwind", role: "Royal Mage", description: "Powerful sorceress and advisor to the king"},
-                    {id: 2, name: "Gareth Ironbeard", role: "Master Craftsman", description: "Legendary blacksmith who forges magical weapons"}
-                ],
-                timeline: [
-                    {date: "Year 0", event: "Foundation of Crystal City"},
-                    {date: "Year 247", event: "The Great Magic War begins"}
-                ],
-                createdAt: "2025-08-20"
-            },
-            {
-                id: 2,
-                name: "Neo Tokyo 2185",
-                description: "Cyberpunk metropolis with towering arcologies and neon-lit streets",
-                type: "Sci-Fi",
-                size: "Megacity",
-                climate: "Urban",
-                population: "50 million",
-                locations: [
-                    {id: 3, name: "Nexus Tower", description: "Central hub for digital consciousness transfers"},
-                    {id: 4, name: "Underground Markets", description: "Black market for illegal tech modifications"}
-                ],
-                characters: [
-                    {id: 3, name: "Kai Nakamura", role: "Cyber Detective", description: "Investigates crimes in both physical and virtual realms"},
-                    {id: 4, name: "Zero-Nine", role: "AI Hacker", description: "Sentient AI that fights for digital rights"}
-                ],
-                timeline: [
-                    {date: "2150", event: "First successful consciousness upload"},
-                    {date: "2172", event: "AI Rights Movement begins"}
-                ],
-                createdAt: "2025-09-05"
-            }
-        ];
-
-        // Wait for DOM to be ready before initializing
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.init());
-        } else {
-            this.init();
-        }
-    }
-
-    init() {
-        console.log('Initializing Runius App...');
-        this.setupEventListeners();
-        this.applyTheme();
-        this.showAuthScreen(); // Always start with auth screen for demo
-    }
-
-    setupEventListeners() {
-        console.log('Setting up event listeners...');
-        
-        // Authentication - with null checks
-        const loginForm = document.getElementById('login-form-element');
-        const registerForm = document.getElementById('register-form-element');
-        const showRegister = document.getElementById('show-register');
-        const showLogin = document.getElementById('show-login');
-        
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
-        }
-        
-        if (registerForm) {
-            registerForm.addEventListener('submit', (e) => this.handleRegister(e));
-        }
-        
-        if (showRegister) {
-            showRegister.addEventListener('click', (e) => this.showRegisterForm(e));
-        }
-        
-        if (showLogin) {
-            showLogin.addEventListener('click', (e) => this.showLoginForm(e));
-        }
-
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const settingsThemeToggle = document.getElementById('settings-theme-toggle');
-        
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.toggleTheme());
-        }
-        
-        if (settingsThemeToggle) {
-            settingsThemeToggle.addEventListener('click', () => this.toggleTheme());
-        }
-
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => this.handleNavigation(e));
-        });
-
-        // User menu
-        const userMenuBtn = document.getElementById('user-menu-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        if (userMenuBtn) {
-            userMenuBtn.addEventListener('click', () => this.toggleUserMenu());
-        }
-        
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
-        }
-        
-        document.addEventListener('click', (e) => this.handleOutsideClick(e));
-
-        // Dashboard buttons
-        const createProjectBtn = document.getElementById('create-project-btn');
-        const createWorldBtn = document.getElementById('create-world-btn');
-        const newProjectBtn = document.getElementById('new-project-btn');
-        const newWorldBtn = document.getElementById('new-world-btn');
-        
-        if (createProjectBtn) createProjectBtn.addEventListener('click', () => this.openProjectModal());
-        if (createWorldBtn) createWorldBtn.addEventListener('click', () => this.openWorldModal());
-        if (newProjectBtn) newProjectBtn.addEventListener('click', () => this.openProjectModal());
-        if (newWorldBtn) newWorldBtn.addEventListener('click', () => this.openWorldModal());
-
-        // Settings
-        const profileForm = document.getElementById('profile-form');
-        if (profileForm) {
-            profileForm.addEventListener('submit', (e) => this.handleProfileUpdate(e));
-        }
-
-        // Setup modal listeners
-        this.setupModalListeners();
-    }
-
-    setupModalListeners() {
-        const modals = [
-            { id: 'project-modal', closeId: 'project-modal-close', cancelId: 'project-cancel', formId: 'project-form' },
-            { id: 'world-modal', closeId: 'world-modal-close', cancelId: 'world-cancel', formId: 'world-form' },
-            { id: 'project-detail-modal', closeId: 'project-detail-close' },
-            { id: 'world-detail-modal', closeId: 'world-detail-close' }
-        ];
-
-        modals.forEach(modal => {
-            const closeBtn = document.getElementById(modal.closeId);
-            const cancelBtn = modal.cancelId ? document.getElementById(modal.cancelId) : null;
-            const form = modal.formId ? document.getElementById(modal.formId) : null;
-            const modalElement = document.getElementById(modal.id);
-
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => this.closeModal(modal.id));
-            }
-            
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => this.closeModal(modal.id));
-            }
-            
-            if (form && modal.id === 'project-modal') {
-                form.addEventListener('submit', (e) => this.handleProjectSubmit(e));
-            } else if (form && modal.id === 'world-modal') {
-                form.addEventListener('submit', (e) => this.handleWorldSubmit(e));
-            }
-
-            if (modalElement) {
-                modalElement.addEventListener('click', (e) => {
-                    if (e.target === modalElement) {
-                        this.closeModal(modal.id);
-                    }
-                });
-            }
-        });
-
-        // World detail tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.switchTab(e));
-        });
-    }
-
-    // Authentication Methods
-    handleLogin(e) {
-        e.preventDefault();
-        console.log('Login form submitted');
-        
-        const emailInput = document.getElementById('login-email');
-        const passwordInput = document.getElementById('login-password');
-        const rememberInput = document.getElementById('remember-me');
-        
-        if (!emailInput || !passwordInput) {
-            console.error('Login form elements not found');
-            return;
-        }
-
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        const rememberMe = rememberInput ? rememberInput.checked : false;
-
-        console.log('Login attempt:', { email, password: password ? '***' : 'empty' });
-
-        const user = this.users.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            console.log('Login successful');
-            this.currentUser = user;
-            this.showMainApp();
-            this.showMessage('Login successful!', 'success');
-        } else {
-            console.log('Login failed');
-            this.showMessage('Invalid email or password', 'error');
-        }
-    }
-
-    handleRegister(e) {
-        e.preventDefault();
-        console.log('Register form submitted');
-        
-        const username = document.getElementById('register-username').value.trim();
-        const email = document.getElementById('register-email').value.trim();
-        const password = document.getElementById('register-password').value.trim();
-        const confirmPassword = document.getElementById('register-confirm').value.trim();
-
-        // Validation
-        if (password !== confirmPassword) {
-            this.showMessage('Passwords do not match', 'error');
-            return;
-        }
-
-        if (password.length < 6) {
-            this.showMessage('Password must be at least 6 characters long', 'error');
-            return;
-        }
-
-        if (this.users.find(u => u.email === email)) {
-            this.showMessage('Email already exists', 'error');
-            return;
-        }
-
-        // Create new user
-        const newUser = {
-            id: this.users.length + 1,
-            username,
-            email,
-            password,
-            name: username,
-            avatar: "/api/placeholder/40/40"
-        };
-
-        this.users.push(newUser);
-        this.currentUser = newUser;
-        
-        this.showMainApp();
-        this.showMessage('Account created successfully!', 'success');
-    }
-
-    handleLogout(e) {
-        e.preventDefault();
-        console.log('Logout clicked');
-        this.currentUser = null;
-        this.showAuthScreen();
-    }
-
-    showAuthScreen() {
-        console.log('Showing auth screen');
-        const authScreen = document.getElementById('auth-screen');
-        const mainApp = document.getElementById('main-app');
-        
-        if (authScreen) authScreen.classList.remove('hidden');
-        if (mainApp) mainApp.classList.add('hidden');
-    }
-
-    showMainApp() {
-        console.log('Showing main app');
-        const authScreen = document.getElementById('auth-screen');
-        const mainApp = document.getElementById('main-app');
-        
-        if (authScreen) authScreen.classList.add('hidden');
-        if (mainApp) mainApp.classList.remove('hidden');
-        
-        this.updateUserInfo();
-        this.navigateToPage('dashboard');
-    }
-
-    showRegisterForm(e) {
-        e.preventDefault();
-        console.log('Showing register form');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        
-        if (loginForm) loginForm.classList.add('hidden');
-        if (registerForm) registerForm.classList.remove('hidden');
-    }
-
-    showLoginForm(e) {
-        e.preventDefault();
-        console.log('Showing login form');
-        const registerForm = document.getElementById('register-form');
-        const loginForm = document.getElementById('login-form');
-        
-        if (registerForm) registerForm.classList.add('hidden');
-        if (loginForm) loginForm.classList.remove('hidden');
-    }
-
-    // Theme Methods
-    toggleTheme() {
-        console.log('Toggling theme');
-        this.theme = this.theme === 'light' ? 'dark' : 'light';
-        this.applyTheme();
-    }
-
-    applyTheme() {
-        document.documentElement.setAttribute('data-theme', this.theme);
-    }
-
-    // Navigation Methods
-    handleNavigation(e) {
-        e.preventDefault();
-        const page = e.target.closest('[data-page]').dataset.page;
-        if (page) {
-            this.navigateToPage(page);
-        }
-    }
-
-    navigateToPage(page) {
-        console.log('Navigating to page:', page);
-        
-        // Update active nav link
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        
-        const activeLink = document.querySelector(`[data-page="${page}"]`);
-        if (activeLink) {
-            activeLink.classList.add('active');
-        }
-
-        // Show corresponding page
-        document.querySelectorAll('.page').forEach(p => {
-            p.classList.remove('active');
-        });
-        
-        const activePage = document.getElementById(`${page}-page`);
-        if (activePage) {
-            activePage.classList.add('active');
-        }
-
-        this.currentPage = page;
-        
-        // Load page-specific content
-        switch (page) {
-            case 'dashboard':
-                this.loadDashboard();
-                break;
-            case 'projects':
-                this.loadProjects();
-                break;
-            case 'worlds':
-                this.loadWorlds();
-                break;
-            case 'settings':
-                this.loadSettings();
-                break;
-        }
-    }
-
-    // User Interface Methods
-    updateUserInfo() {
-        if (this.currentUser) {
-            const userName = document.getElementById('user-name');
-            const welcomeUser = document.getElementById('welcome-user');
-            const userAvatarImg = document.getElementById('user-avatar-img');
-            
-            if (userName) userName.textContent = this.currentUser.name;
-            if (welcomeUser) welcomeUser.textContent = this.currentUser.name.split(' ')[0];
-            if (userAvatarImg) userAvatarImg.src = this.currentUser.avatar;
-        }
-    }
-
-    toggleUserMenu() {
-        const dropdown = document.getElementById('user-dropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('hidden');
-        }
-    }
-
-    handleOutsideClick(e) {
-        const userMenu = document.querySelector('.user-menu');
-        const dropdown = document.getElementById('user-dropdown');
-        
-        if (userMenu && dropdown && !userMenu.contains(e.target)) {
-            dropdown.classList.add('hidden');
-        }
-    }
-
-    // Dashboard Methods
-    loadDashboard() {
-        this.updateDashboardStats();
-        this.loadRecentProjects();
-        this.loadRecentWorlds();
-    }
-
-    updateDashboardStats() {
-        const totalProjectsEl = document.getElementById('total-projects');
-        const activeWorldsEl = document.getElementById('active-worlds');
-        const teamMembersEl = document.getElementById('team-members');
-        
-        if (totalProjectsEl) totalProjectsEl.textContent = this.projects.length;
-        if (activeWorldsEl) activeWorldsEl.textContent = this.worlds.length;
-        
-        // Calculate unique team members
-        const allMembers = new Set();
-        this.projects.forEach(project => {
-            project.teamMembers.forEach(member => allMembers.add(member));
-        });
-        if (teamMembersEl) teamMembersEl.textContent = allMembers.size;
-    }
-
-    loadRecentProjects() {
-        const container = document.getElementById('recent-projects');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        this.projects.slice(0, 3).forEach(project => {
-            const projectCard = this.createProjectCard(project);
-            container.appendChild(projectCard);
-        });
-    }
-
-    loadRecentWorlds() {
-        const container = document.getElementById('recent-worlds');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        this.worlds.slice(0, 3).forEach(world => {
-            const worldCard = this.createWorldCard(world);
-            container.appendChild(worldCard);
-        });
-    }
-
-    // Projects Methods
-    loadProjects() {
-        const container = document.getElementById('projects-grid');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        this.projects.forEach(project => {
-            const projectCard = this.createProjectCard(project);
-            container.appendChild(projectCard);
-        });
-    }
-
-    createProjectCard(project) {
-        const card = document.createElement('div');
-        card.className = 'project-card';
-        card.innerHTML = `
-            <h4>${project.name}</h4>
-            <p>${project.description}</p>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${project.progress}%"></div>
-            </div>
-            <div class="project-meta">
-                <span>${project.category}</span>
-                <span>${project.progress}% complete</span>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => this.openProjectDetail(project));
-        return card;
-    }
-
-    openProjectModal(project = null) {
-        const modal = document.getElementById('project-modal');
-        const title = document.getElementById('project-modal-title');
-        const form = document.getElementById('project-form');
-        
-        if (!modal || !title || !form) return;
-        
-        if (project) {
-            title.textContent = 'Edit Project';
-            form.dataset.projectId = project.id;
-            
-            const nameInput = document.getElementById('project-name');
-            const descInput = document.getElementById('project-description');
-            const catInput = document.getElementById('project-category');
-            const deadlineInput = document.getElementById('project-deadline');
-            
-            if (nameInput) nameInput.value = project.name;
-            if (descInput) descInput.value = project.description;
-            if (catInput) catInput.value = project.category;
-            if (deadlineInput) deadlineInput.value = project.deadline;
-        } else {
-            title.textContent = 'Create New Project';
-            form.removeAttribute('data-project-id');
-            form.reset();
-        }
-        
-        this.showModal('project-modal');
-    }
-
-    handleProjectSubmit(e) {
-        e.preventDefault();
-        console.log('Project form submitted');
-        
-        const form = e.target;
-        const projectId = form.dataset.projectId;
-        
-        const nameInput = document.getElementById('project-name');
-        const descInput = document.getElementById('project-description');
-        const catInput = document.getElementById('project-category');
-        const deadlineInput = document.getElementById('project-deadline');
-        
-        if (!nameInput || !descInput || !catInput || !deadlineInput) return;
-        
-        const projectData = {
-            name: nameInput.value.trim(),
-            description: descInput.value.trim(),
-            category: catInput.value,
-            deadline: deadlineInput.value,
-            progress: 0,
-            teamMembers: [this.currentUser.name],
-            tasks: [],
-            createdAt: new Date().toISOString().split('T')[0]
-        };
-
-        if (projectId) {
-            // Update existing project
-            const project = this.projects.find(p => p.id == projectId);
-            if (project) {
-                Object.assign(project, projectData);
-            }
-        } else {
-            // Create new project
-            projectData.id = this.projects.length + 1;
-            this.projects.push(projectData);
-        }
-
-        this.closeModal('project-modal');
-        this.showMessage('Project saved successfully!', 'success');
-        
-        if (this.currentPage === 'projects') {
-            this.loadProjects();
-        } else {
-            this.loadDashboard();
-        }
-    }
-
-    openProjectDetail(project) {
-        const titleEl = document.getElementById('project-detail-title');
-        const descEl = document.getElementById('project-detail-description');
-        const catEl = document.getElementById('project-detail-category');
-        const deadlineEl = document.getElementById('project-detail-deadline');
-        const progressEl = document.getElementById('project-detail-progress');
-        
-        if (titleEl) titleEl.textContent = project.name;
-        if (descEl) descEl.textContent = project.description;
-        if (catEl) catEl.textContent = project.category;
-        if (deadlineEl) deadlineEl.textContent = new Date(project.deadline).toLocaleDateString();
-        if (progressEl) progressEl.textContent = project.progress;
-        
-        this.loadProjectTasks(project);
-        this.showModal('project-detail-modal');
-    }
-
-    loadProjectTasks(project) {
-        const container = document.getElementById('project-tasks-list');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        project.tasks.forEach(task => {
-            const taskItem = document.createElement('div');
-            taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
-            taskItem.innerHTML = `
-                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
-                       data-project-id="${project.id}" data-task-id="${task.id}">
-                <h5 class="task-title">${task.title}</h5>
-            `;
-            
-            const checkbox = taskItem.querySelector('.task-checkbox');
-            checkbox.addEventListener('change', (e) => {
-                this.toggleTask(parseInt(e.target.dataset.projectId), parseInt(e.target.dataset.taskId));
-            });
-            
-            container.appendChild(taskItem);
-        });
-    }
-
-    toggleTask(projectId, taskId) {
-        console.log('Toggling task:', projectId, taskId);
-        
-        const project = this.projects.find(p => p.id === projectId);
-        if (!project) return;
-        
-        const task = project.tasks.find(t => t.id === taskId);
-        if (!task) return;
-        
-        task.completed = !task.completed;
-        
-        // Update progress
-        const completedTasks = project.tasks.filter(t => t.completed).length;
-        project.progress = Math.round((completedTasks / project.tasks.length) * 100);
-        
-        this.loadProjectTasks(project);
-        
-        // Update progress in detail view
-        const progressEl = document.getElementById('project-detail-progress');
-        if (progressEl) progressEl.textContent = project.progress;
-        
-        // Refresh current page view
-        if (this.currentPage === 'projects') {
-            setTimeout(() => this.loadProjects(), 300);
-        } else if (this.currentPage === 'dashboard') {
-            setTimeout(() => this.loadDashboard(), 300);
-        }
-    }
-
-    // Worlds Methods
-    loadWorlds() {
-        const container = document.getElementById('worlds-grid');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        this.worlds.forEach(world => {
-            const worldCard = this.createWorldCard(world);
-            container.appendChild(worldCard);
-        });
-    }
-
-    createWorldCard(world) {
-        const card = document.createElement('div');
-        card.className = 'world-card';
-        card.innerHTML = `
-            <h4>${world.name}</h4>
-            <p>${world.description}</p>
-            <div class="world-meta">
-                <span>${world.type}</span>
-                <span>${world.size}</span>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => this.openWorldDetail(world));
-        return card;
-    }
-
-    openWorldModal(world = null) {
-        const modal = document.getElementById('world-modal');
-        const title = document.getElementById('world-modal-title');
-        const form = document.getElementById('world-form');
-        
-        if (!modal || !title || !form) return;
-        
-        if (world) {
-            title.textContent = 'Edit World';
-            form.dataset.worldId = world.id;
-            
-            const nameInput = document.getElementById('world-name');
-            const descInput = document.getElementById('world-description');
-            const typeInput = document.getElementById('world-type');
-            const sizeInput = document.getElementById('world-size');
-            
-            if (nameInput) nameInput.value = world.name;
-            if (descInput) descInput.value = world.description;
-            if (typeInput) typeInput.value = world.type;
-            if (sizeInput) sizeInput.value = world.size;
-        } else {
-            title.textContent = 'Create New World';
-            form.removeAttribute('data-world-id');
-            form.reset();
-        }
-        
-        this.showModal('world-modal');
-    }
-
-    handleWorldSubmit(e) {
-        e.preventDefault();
-        console.log('World form submitted');
-        
-        const form = e.target;
-        const worldId = form.dataset.worldId;
-        
-        const nameInput = document.getElementById('world-name');
-        const descInput = document.getElementById('world-description');
-        const typeInput = document.getElementById('world-type');
-        const sizeInput = document.getElementById('world-size');
-        
-        if (!nameInput || !descInput || !typeInput || !sizeInput) return;
-        
-        const worldData = {
-            name: nameInput.value.trim(),
-            description: descInput.value.trim(),
-            type: typeInput.value,
-            size: sizeInput.value,
-            climate: 'Temperate',
-            population: '1 million',
-            locations: [],
-            characters: [],
-            timeline: [],
-            createdAt: new Date().toISOString().split('T')[0]
-        };
-
-        if (worldId) {
-            // Update existing world
-            const world = this.worlds.find(w => w.id == worldId);
-            if (world) {
-                Object.assign(world, worldData);
-            }
-        } else {
-            // Create new world
-            worldData.id = this.worlds.length + 1;
-            this.worlds.push(worldData);
-        }
-
-        this.closeModal('world-modal');
-        this.showMessage('World saved successfully!', 'success');
-        
-        if (this.currentPage === 'worlds') {
-            this.loadWorlds();
-        } else {
-            this.loadDashboard();
-        }
-    }
-
-    openWorldDetail(world) {
-        const titleEl = document.getElementById('world-detail-title');
-        if (titleEl) titleEl.textContent = world.name;
-        
-        this.currentWorld = world;
-        this.loadWorldOverview(world);
-        this.loadWorldLocations(world);
-        this.loadWorldCharacters(world);
-        this.loadWorldTimeline(world);
-        this.showModal('world-detail-modal');
-    }
-
-    switchTab(e) {
-        const tabName = e.target.dataset.tab;
-        
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        e.target.classList.add('active');
-        
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        
-        const activeTab = document.getElementById(`${tabName}-tab`);
-        if (activeTab) {
-            activeTab.classList.add('active');
-        }
-    }
-
-    loadWorldOverview(world) {
-        const container = document.getElementById('world-overview');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <h4>${world.name}</h4>
-            <p><strong>Type:</strong> ${world.type}</p>
-            <p><strong>Size:</strong> ${world.size}</p>
-            <p><strong>Climate:</strong> ${world.climate}</p>
-            <p><strong>Population:</strong> ${world.population}</p>
-            <p><strong>Description:</strong> ${world.description}</p>
-        `;
-    }
-
-    loadWorldLocations(world) {
-        const container = document.getElementById('world-locations-list');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        world.locations.forEach(location => {
-            const locationItem = document.createElement('div');
-            locationItem.className = 'location-item';
-            locationItem.innerHTML = `
-                <h5>${location.name}</h5>
-                <p>${location.description}</p>
-            `;
-            container.appendChild(locationItem);
-        });
-    }
-
-    loadWorldCharacters(world) {
-        const container = document.getElementById('world-characters-list');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        world.characters.forEach(character => {
-            const characterItem = document.createElement('div');
-            characterItem.className = 'character-item';
-            characterItem.innerHTML = `
-                <h5>${character.name}</h5>
-                <div class="character-role">${character.role}</div>
-                <p>${character.description}</p>
-            `;
-            container.appendChild(characterItem);
-        });
-    }
-
-    loadWorldTimeline(world) {
-        const container = document.getElementById('world-timeline-list');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        world.timeline.forEach(event => {
-            const timelineItem = document.createElement('div');
-            timelineItem.className = 'timeline-item';
-            timelineItem.innerHTML = `
-                <div class="timeline-date">${event.date}</div>
-                <p>${event.event}</p>
-            `;
-            container.appendChild(timelineItem);
-        });
-    }
-
-    // Settings Methods
-    loadSettings() {
-        if (this.currentUser) {
-            const nameInput = document.getElementById('profile-name');
-            const emailInput = document.getElementById('profile-email');
-            
-            if (nameInput) nameInput.value = this.currentUser.name;
-            if (emailInput) emailInput.value = this.currentUser.email;
-        }
-    }
-
-    handleProfileUpdate(e) {
-        e.preventDefault();
-        
-        const nameInput = document.getElementById('profile-name');
-        const emailInput = document.getElementById('profile-email');
-        
-        if (!nameInput || !emailInput || !this.currentUser) return;
-        
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        
-        this.currentUser.name = name;
-        this.currentUser.email = email;
-        this.updateUserInfo();
-        this.showMessage('Profile updated successfully!', 'success');
-    }
-
-    // Modal Methods
-    showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        
-        modal.classList.remove('hidden');
-        modal.classList.add('visible');
-        document.body.style.overflow = 'hidden';
-    }
-
-    closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        
-        modal.classList.remove('visible');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }, 250);
-    }
-
-    // Utility Methods
-    showMessage(text, type) {
-        // Remove existing messages
-        const existingMessage = document.querySelector('.message');
-        if (existingMessage) {
-            existingMessage.remove();
-        }
-
-        const message = document.createElement('div');
-        message.className = `message message--${type}`;
-        message.textContent = text;
-        
-        // Insert at the beginning of the current page
-        const currentPageElement = document.querySelector('.page.active');
-        if (currentPageElement) {
-            currentPageElement.insertBefore(message, currentPageElement.firstChild);
-        } else {
-            // Fallback to auth screen
-            const authForm = document.querySelector('.auth-form:not(.hidden)');
-            if (authForm) {
-                authForm.insertBefore(message, authForm.firstChild);
-            }
-        }
-        
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.remove();
-            }
-        }, 3000);
-    }
-
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
+// Application State
+let appState = {
+  currentUser: null,
+  currentView: 'dashboard',
+  theme: 'light',
+  projects: [],
+  tasks: [],
+  currentProject: null,
+  editingProject: null,
+  editingTask: null
+};
+
+// Sample Data
+const sampleProjects = [
+  {
+    id: 1,
+    name: "E-Commerce Platform",
+    description: "Build a modern e-commerce website with payment integration",
+    status: "In Progress",
+    progress: 65,
+    start_date: "2025-10-01",
+    end_date: "2025-12-15",
+    tech_stack: {
+      frontend: ["React", "Tailwind CSS", "Redux"],
+      backend: ["Node.js", "Express"],
+      database: ["PostgreSQL"],
+      devops: ["Docker", "AWS"]
+    },
+    team_members: ["John Doe", "Jane Smith"]
+  },
+  {
+    id: 2,
+    name: "Mobile Banking App",
+    description: "iOS and Android banking application with biometric authentication",
+    status: "Planning",
+    progress: 15,
+    start_date: "2025-11-01",
+    end_date: "2026-03-30",
+    tech_stack: {
+      frontend: ["React Native", "TypeScript"],
+      backend: ["Java", "Spring Boot"],
+      database: ["MongoDB"],
+      devops: ["Jenkins", "Azure"]
+    },
+    team_members: ["Mike Johnson", "Sarah Williams"]
+  },
+  {
+    id: 3,
+    name: "AI Chatbot Integration",
+    description: "Implement AI-powered customer service chatbot",
+    status: "In Progress",
+    progress: 40,
+    start_date: "2025-09-15",
+    end_date: "2025-11-30",
+    tech_stack: {
+      frontend: ["Vue.js"],
+      backend: ["Python", "FastAPI"],
+      database: ["Redis"],
+      tools: ["OpenAI API", "Langchain"]
+    },
+    team_members: ["Alex Brown"]
+  },
+  {
+    id: 4,
+    name: "Data Analytics Dashboard",
+    description: "Real-time business intelligence dashboard",
+    status: "Completed",
+    progress: 100,
+    start_date: "2025-07-01",
+    end_date: "2025-09-30",
+    tech_stack: {
+      frontend: ["Angular", "D3.js"],
+      backend: ["Python", "Django"],
+      database: ["MySQL"],
+      devops: ["Kubernetes"]
+    },
+    team_members: ["Emily Davis", "Chris Martinez"]
+  }
+];
+
+const sampleTasks = [
+  {
+    id: 1,
+    project_id: 1,
+    title: "Design homepage mockup",
+    description: "Create initial design mockups for homepage",
+    priority: "High",
+    status: "Done",
+    assigned_to: "Jane Smith",
+    due_date: "2025-10-15"
+  },
+  {
+    id: 2,
+    project_id: 1,
+    title: "Implement payment gateway",
+    description: "Integrate Stripe payment processing",
+    priority: "High",
+    status: "In Progress",
+    assigned_to: "John Doe",
+    due_date: "2025-11-20"
+  },
+  {
+    id: 3,
+    project_id: 1,
+    title: "Set up product database",
+    description: "Create PostgreSQL schema for products",
+    priority: "Medium",
+    status: "Done",
+    assigned_to: "John Doe",
+    due_date: "2025-10-25"
+  },
+  {
+    id: 4,
+    project_id: 2,
+    title: "Research biometric SDKs",
+    description: "Evaluate available biometric authentication libraries",
+    priority: "High",
+    status: "In Progress",
+    assigned_to: "Mike Johnson",
+    due_date: "2025-11-15"
+  },
+  {
+    id: 5,
+    project_id: 3,
+    title: "Train AI model",
+    description: "Fine-tune language model on company data",
+    priority: "High",
+    status: "In Progress",
+    assigned_to: "Alex Brown",
+    due_date: "2025-11-10"
+  },
+  {
+    id: 6,
+    project_id: 1,
+    title: "Write API documentation",
+    description: "Document all REST API endpoints",
+    priority: "Low",
+    status: "To Do",
+    assigned_to: "John Doe",
+    due_date: "2025-12-01"
+  }
+];
+
+const workflowStages = [
+  { id: 1, title: "Planning", icon: "📋", subtitle: "Requirements" },
+  { id: 2, title: "Design", icon: "🎨", subtitle: "Prototyping" },
+  { id: 3, title: "Development", icon: "💻", subtitle: "Building" },
+  { id: 4, title: "Testing", icon: "🧪", subtitle: "QA" },
+  { id: 5, title: "Deployment", icon: "🚀", subtitle: "Release" },
+  { id: 6, title: "Maintenance", icon: "🔧", subtitle: "Support" }
+];
+
+// Initialize Application
+function initializeApp() {
+  appState.projects = [...sampleProjects];
+  appState.tasks = [...sampleTasks];
+  
+  // Check for saved theme preference
+  const savedTheme = appState.theme || 'light';
+  setTheme(savedTheme);
+  
+  setupEventListeners();
 }
 
-// Initialize the application
-const app = new RuniusApp();
+// Event Listeners
+function setupEventListeners() {
+  // Login Form
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLogin);
+  }
+  
+  // Logout Button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+  
+  // Theme Toggle
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+  }
+  
+  // Navigation
+  const navButtons = document.querySelectorAll('.nav-btn');
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const view = e.target.dataset.view;
+      switchView(view);
+    });
+  });
+  
+  // Project Form
+  const projectForm = document.getElementById('projectForm');
+  if (projectForm) {
+    projectForm.addEventListener('submit', handleProjectSubmit);
+  }
+  
+  // Task Form
+  const taskForm = document.getElementById('taskForm');
+  if (taskForm) {
+    taskForm.addEventListener('submit', handleTaskSubmit);
+  }
+  
+  // Filters
+  const projectFilter = document.getElementById('projectFilter');
+  if (projectFilter) {
+    projectFilter.addEventListener('change', renderProjects);
+  }
+  
+  const projectSearch = document.getElementById('projectSearch');
+  if (projectSearch) {
+    projectSearch.addEventListener('input', renderProjects);
+  }
+  
+  const taskFilter = document.getElementById('taskFilter');
+  if (taskFilter) {
+    taskFilter.addEventListener('change', renderTasks);
+  }
+  
+  const priorityFilter = document.getElementById('priorityFilter');
+  if (priorityFilter) {
+    priorityFilter.addEventListener('change', renderTasks);
+  }
+  
+  const workflowTemplate = document.getElementById('workflowTemplate');
+  if (workflowTemplate) {
+    workflowTemplate.addEventListener('change', renderWorkflow);
+  }
+  
+  // Project Detail Tabs
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-btn')) {
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      e.target.classList.add('active');
+      const tabName = e.target.dataset.tab;
+      renderProjectDetailTab(tabName);
+    }
+  });
+}
+
+// Login Handler
+function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  // Simple authentication
+  if (username === 'admin' && password === 'admin123') {
+    appState.currentUser = username;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('userDisplayName').textContent = username;
+    document.getElementById('welcomeUserName').textContent = username;
+    
+    showToast('Welcome to Runius!');
+    renderDashboard();
+    renderProjects();
+    renderTasks();
+    renderSchedule();
+    renderWorkflow();
+    renderAnalytics();
+  } else {
+    showToast('Invalid credentials. Try admin/admin123');
+  }
+}
+
+// Logout Handler
+function handleLogout() {
+  appState.currentUser = null;
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginForm').reset();
+  showToast('Logged out successfully');
+}
+
+// Theme Toggle
+function toggleTheme() {
+  const newTheme = appState.theme === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+}
+
+function setTheme(theme) {
+  appState.theme = theme;
+  document.documentElement.setAttribute('data-color-scheme', theme);
+  
+  const sunIcon = document.querySelector('.sun-icon');
+  const moonIcon = document.querySelector('.moon-icon');
+  
+  if (theme === 'dark') {
+    sunIcon?.classList.add('hidden');
+    moonIcon?.classList.remove('hidden');
+  } else {
+    sunIcon?.classList.remove('hidden');
+    moonIcon?.classList.add('hidden');
+  }
+}
+
+// View Switching
+function switchView(viewName) {
+  appState.currentView = viewName;
+  
+  // Update nav buttons
+  const navButtons = document.querySelectorAll('.nav-btn');
+  navButtons.forEach(btn => {
+    if (btn.dataset.view === viewName) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
+  // Update view containers
+  const views = document.querySelectorAll('.view-container');
+  views.forEach(view => view.classList.remove('active'));
+  
+  const activeView = document.getElementById(`${viewName}View`);
+  if (activeView) {
+    activeView.classList.add('active');
+  }
+}
+
+// Dashboard Rendering
+function renderDashboard() {
+  const totalProjects = appState.projects.length;
+  const activeTasks = appState.tasks.filter(t => t.status !== 'Done').length;
+  const completedTasks = appState.tasks.filter(t => t.status === 'Done').length;
+  const upcomingDeadlines = appState.tasks.filter(t => {
+    const dueDate = new Date(t.due_date);
+    const today = new Date();
+    const diff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    return diff >= 0 && diff <= 7;
+  }).length;
+  
+  document.getElementById('totalProjects').textContent = totalProjects;
+  document.getElementById('activeTasks').textContent = activeTasks;
+  document.getElementById('completedTasks').textContent = completedTasks;
+  document.getElementById('upcomingDeadlines').textContent = upcomingDeadlines;
+  
+  // Project Overview
+  const overviewList = document.getElementById('projectOverviewList');
+  const activeProjects = appState.projects.filter(p => p.status === 'In Progress').slice(0, 5);
+  
+  overviewList.innerHTML = activeProjects.map(project => `
+    <div class="project-overview-item" onclick="viewProjectDetail(${project.id})">
+      <h4>${project.name}</h4>
+      <p>Progress: ${project.progress}% • Due: ${formatDate(project.end_date)}</p>
+    </div>
+  `).join('');
+}
+
+// Projects Rendering
+function renderProjects() {
+  const projectsList = document.getElementById('projectsList');
+  const filterValue = document.getElementById('projectFilter')?.value || 'all';
+  const searchValue = document.getElementById('projectSearch')?.value.toLowerCase() || '';
+  
+  let filteredProjects = appState.projects;
+  
+  if (filterValue !== 'all') {
+    filteredProjects = filteredProjects.filter(p => p.status === filterValue);
+  }
+  
+  if (searchValue) {
+    filteredProjects = filteredProjects.filter(p => 
+      p.name.toLowerCase().includes(searchValue) || 
+      p.description.toLowerCase().includes(searchValue)
+    );
+  }
+  
+  projectsList.innerHTML = filteredProjects.map(project => `
+    <div class="project-card" onclick="viewProjectDetail(${project.id})">
+      <div class="project-card-header">
+        <h3>${project.name}</h3>
+        <p>${project.description}</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-status ${project.status.toLowerCase().replace(' ', '-')}">${project.status}</span>
+        <span class="project-dates">📅 ${formatDate(project.start_date)} - ${formatDate(project.end_date)}</span>
+      </div>
+      <div class="progress-container">
+        <div class="progress-header">
+          <span>Progress</span>
+          <span>${project.progress}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${project.progress}%"></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Tasks Rendering
+function renderTasks() {
+  const tasksList = document.getElementById('tasksList');
+  const statusFilter = document.getElementById('taskFilter')?.value || 'all';
+  const priorityFilter = document.getElementById('priorityFilter')?.value || 'all';
+  
+  let filteredTasks = appState.tasks;
+  
+  if (statusFilter !== 'all') {
+    filteredTasks = filteredTasks.filter(t => t.status === statusFilter);
+  }
+  
+  if (priorityFilter !== 'all') {
+    filteredTasks = filteredTasks.filter(t => t.priority === priorityFilter);
+  }
+  
+  tasksList.innerHTML = filteredTasks.map(task => {
+    const project = appState.projects.find(p => p.id === task.project_id);
+    return `
+      <div class="task-card">
+        <div class="task-header">
+          <h4>${task.title}</h4>
+          <span class="task-priority ${task.priority.toLowerCase()}">${task.priority}</span>
+        </div>
+        <p class="task-description">${task.description}</p>
+        <div class="task-meta">
+          <span class="task-meta-item">📂 ${project?.name || 'Unknown'}</span>
+          <span class="task-meta-item">👤 ${task.assigned_to}</span>
+          <span class="task-meta-item">📅 ${formatDate(task.due_date)}</span>
+          <span class="task-meta-item">Status: ${task.status}</span>
+        </div>
+        <div class="task-actions">
+          ${task.status !== 'Done' ? `<button class="task-btn" onclick="toggleTaskStatus(${task.id})">✓ Mark Done</button>` : ''}
+          <button class="task-btn" onclick="editTask(${task.id})">Edit</button>
+          <button class="task-btn" onclick="deleteTask(${task.id})">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Schedule Rendering
+function renderSchedule() {
+  renderCalendar();
+  renderGanttChart();
+}
+
+function renderCalendar() {
+  const calendar = document.getElementById('calendar');
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDayOfWeek = firstDay.getDay();
+  
+  // Task dates
+  const taskDates = new Set(appState.tasks.map(t => t.due_date));
+  
+  let calendarHTML = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => 
+    `<div class="calendar-header">${day}</div>`
+  ).join('');
+  
+  // Empty cells before first day
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    calendarHTML += '<div class="calendar-day"></div>';
+  }
+  
+  // Days of month
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const hasEvent = taskDates.has(dateStr);
+    const isToday = day === today.getDate() && currentMonth === today.getMonth();
+    
+    let classes = 'calendar-day';
+    if (hasEvent) classes += ' has-event';
+    if (isToday) classes += ' today';
+    
+    calendarHTML += `<div class="${classes}">${day}</div>`;
+  }
+  
+  calendar.innerHTML = calendarHTML;
+}
+
+function renderGanttChart() {
+  const ganttChart = document.getElementById('ganttChart');
+  const today = new Date();
+  
+  const ganttHTML = appState.projects.map(project => {
+    const startDate = new Date(project.start_date);
+    const endDate = new Date(project.end_date);
+    const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    const daysPassed = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
+    const progressPercent = Math.max(0, Math.min(100, (daysPassed / totalDays) * 100));
+    
+    return `
+      <div class="gantt-row">
+        <div class="gantt-label">${project.name}</div>
+        <div class="gantt-bar-container">
+          <div class="gantt-bar" style="left: 0; width: ${project.progress}%">
+            ${project.progress}%
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  ganttChart.innerHTML = ganttHTML;
+}
+
+// Workflow Rendering
+function renderWorkflow() {
+  const workflowDiagram = document.getElementById('workflowDiagram');
+  const template = document.getElementById('workflowTemplate')?.value || 'waterfall';
+  
+  let stages = workflowStages;
+  
+  if (template === 'agile') {
+    stages = [
+      { id: 1, title: "Sprint Planning", icon: "📋", subtitle: "Backlog" },
+      { id: 2, title: "Development", icon: "💻", subtitle: "Sprint" },
+      { id: 3, title: "Daily Standup", icon: "🗣️", subtitle: "Sync" },
+      { id: 4, title: "Review", icon: "👀", subtitle: "Demo" },
+      { id: 5, title: "Retrospective", icon: "🔄", subtitle: "Improve" }
+    ];
+  } else if (template === 'kanban') {
+    stages = [
+      { id: 1, title: "Backlog", icon: "📥", subtitle: "Ideas" },
+      { id: 2, title: "To Do", icon: "📋", subtitle: "Ready" },
+      { id: 3, title: "In Progress", icon: "⚙️", subtitle: "Working" },
+      { id: 4, title: "Review", icon: "👁️", subtitle: "Testing" },
+      { id: 5, title: "Done", icon: "✅", subtitle: "Complete" }
+    ];
+  }
+  
+  const stagesHTML = stages.map((stage, index) => {
+    const arrow = index < stages.length - 1 ? '<div class="workflow-arrow">→</div>' : '';
+    return `
+      <div class="workflow-stage">
+        <div class="workflow-stage-icon">${stage.icon}</div>
+        <div class="workflow-stage-title">${stage.title}</div>
+        <div class="workflow-stage-subtitle">${stage.subtitle}</div>
+      </div>
+      ${arrow}
+    `;
+  }).join('');
+  
+  workflowDiagram.innerHTML = `<div class="workflow-container">${stagesHTML}</div>`;
+}
+
+// Analytics Rendering
+function renderAnalytics() {
+  renderProjectStatusChart();
+  renderTaskPriorityChart();
+  renderProjectProgressChart();
+  renderTaskTimelineChart();
+}
+
+function renderProjectStatusChart() {
+  const ctx = document.getElementById('projectStatusChart');
+  if (!ctx) return;
+  
+  const statusCounts = {};
+  appState.projects.forEach(p => {
+    statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
+  });
+  
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(statusCounts),
+      datasets: [{
+        data: Object.values(statusCounts),
+        backgroundColor: ['#1FB8CD', '#FFC185', '#B4413C', '#5D878F']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+function renderTaskPriorityChart() {
+  const ctx = document.getElementById('taskPriorityChart');
+  if (!ctx) return;
+  
+  const priorityCounts = { High: 0, Medium: 0, Low: 0 };
+  appState.tasks.forEach(t => {
+    priorityCounts[t.priority] = (priorityCounts[t.priority] || 0) + 1;
+  });
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(priorityCounts),
+      datasets: [{
+        label: 'Tasks',
+        data: Object.values(priorityCounts),
+        backgroundColor: ['#B4413C', '#FFC185', '#1FB8CD']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderProjectProgressChart() {
+  const ctx = document.getElementById('projectProgressChart');
+  if (!ctx) return;
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: appState.projects.map(p => p.name),
+      datasets: [{
+        label: 'Progress (%)',
+        data: appState.projects.map(p => p.progress),
+        backgroundColor: '#52b788'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+}
+
+function renderTaskTimelineChart() {
+  const ctx = document.getElementById('taskTimelineChart');
+  if (!ctx) return;
+  
+  const statusCounts = { 'To Do': 0, 'In Progress': 0, 'Done': 0 };
+  appState.tasks.forEach(t => {
+    statusCounts[t.status] = (statusCounts[t.status] || 0) + 1;
+  });
+  
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCounts),
+      datasets: [{
+        data: Object.values(statusCounts),
+        backgroundColor: ['#FFC185', '#1FB8CD', '#5D878F']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+// Project Detail View
+function viewProjectDetail(projectId) {
+  const project = appState.projects.find(p => p.id === projectId);
+  if (!project) return;
+  
+  appState.currentProject = project;
+  
+  const modal = document.getElementById('projectDetailModal');
+  document.getElementById('projectDetailName').textContent = project.name;
+  
+  // Reset tabs
+  const tabs = modal.querySelectorAll('.tab-btn');
+  tabs.forEach(tab => tab.classList.remove('active'));
+  tabs[0].classList.add('active');
+  
+  renderProjectDetailTab('overview');
+  modal.classList.add('active');
+}
+
+function renderProjectDetailTab(tabName) {
+  const content = document.getElementById('projectDetailContent');
+  const project = appState.currentProject;
+  
+  if (tabName === 'overview') {
+    content.innerHTML = `
+      <div style="display: grid; gap: 16px;">
+        <div>
+          <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Description</h4>
+          <p>${project.description}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Status</h4>
+            <span class="project-status ${project.status.toLowerCase().replace(' ', '-')}">${project.status}</span>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Progress</h4>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${project.progress}%"></div>
+              </div>
+              <span style="font-size: 12px; margin-top: 4px; display: block;">${project.progress}%</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Start Date</h4>
+            <p>${formatDate(project.start_date)}</p>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">End Date</h4>
+            <p>${formatDate(project.end_date)}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (tabName === 'techstack') {
+    const techStackHTML = Object.entries(project.tech_stack).map(([category, technologies]) => `
+      <div class="tech-category">
+        <h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+        <div class="tech-chips">
+          ${technologies.map(tech => `<span class="tech-chip">${tech}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+    
+    content.innerHTML = `<div class="tech-stack-grid">${techStackHTML}</div>`;
+  } else if (tabName === 'projectTasks') {
+    const projectTasks = appState.tasks.filter(t => t.project_id === project.id);
+    content.innerHTML = projectTasks.map(task => `
+      <div class="task-card" style="margin-bottom: 12px;">
+        <div class="task-header">
+          <h4>${task.title}</h4>
+          <span class="task-priority ${task.priority.toLowerCase()}">${task.priority}</span>
+        </div>
+        <p class="task-description">${task.description}</p>
+        <div class="task-meta">
+          <span class="task-meta-item">👤 ${task.assigned_to}</span>
+          <span class="task-meta-item">📅 ${formatDate(task.due_date)}</span>
+          <span class="task-meta-item">Status: ${task.status}</span>
+        </div>
+      </div>
+    `).join('') || '<p>No tasks for this project yet.</p>';
+  } else if (tabName === 'team') {
+    content.innerHTML = `
+      <div class="team-list">
+        ${project.team_members.map(member => `
+          <div class="team-member">
+            <div class="team-member-avatar">${member.charAt(0).toUpperCase()}</div>
+            <span>${member}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
+
+function closeProjectDetail() {
+  document.getElementById('projectDetailModal').classList.remove('active');
+}
+
+// Project Modal
+function showCreateProjectModal() {
+  appState.editingProject = null;
+  document.getElementById('projectModalTitle').textContent = 'Create New Project';
+  document.getElementById('projectForm').reset();
+  document.getElementById('projectModal').classList.add('active');
+}
+
+function closeProjectModal() {
+  document.getElementById('projectModal').classList.remove('active');
+}
+
+function handleProjectSubmit(e) {
+  e.preventDefault();
+  
+  const projectData = {
+    name: document.getElementById('projectName').value,
+    description: document.getElementById('projectDescription').value,
+    status: document.getElementById('projectStatus').value,
+    progress: parseInt(document.getElementById('projectProgress').value),
+    start_date: document.getElementById('projectStartDate').value,
+    end_date: document.getElementById('projectEndDate').value,
+    tech_stack: { frontend: [], backend: [], database: [], devops: [] },
+    team_members: []
+  };
+  
+  if (appState.editingProject) {
+    const index = appState.projects.findIndex(p => p.id === appState.editingProject.id);
+    appState.projects[index] = { ...appState.editingProject, ...projectData };
+    showToast('Project updated successfully!');
+  } else {
+    const newProject = {
+      id: Date.now(),
+      ...projectData
+    };
+    appState.projects.push(newProject);
+    showToast('Project created successfully!');
+  }
+  
+  closeProjectModal();
+  renderProjects();
+  renderDashboard();
+}
+
+// Task Modal
+function showCreateTaskModal() {
+  appState.editingTask = null;
+  document.getElementById('taskModalTitle').textContent = 'Create New Task';
+  document.getElementById('taskForm').reset();
+  
+  // Populate project dropdown
+  const projectSelect = document.getElementById('taskProject');
+  projectSelect.innerHTML = appState.projects.map(p => 
+    `<option value="${p.id}">${p.name}</option>`
+  ).join('');
+  
+  document.getElementById('taskModal').classList.add('active');
+}
+
+function closeTaskModal() {
+  document.getElementById('taskModal').classList.remove('active');
+}
+
+function handleTaskSubmit(e) {
+  e.preventDefault();
+  
+  const taskData = {
+    title: document.getElementById('taskTitle').value,
+    description: document.getElementById('taskDescription').value,
+    project_id: parseInt(document.getElementById('taskProject').value),
+    priority: document.getElementById('taskPriority').value,
+    status: document.getElementById('taskStatus').value,
+    assigned_to: document.getElementById('taskAssignedTo').value,
+    due_date: document.getElementById('taskDueDate').value
+  };
+  
+  if (appState.editingTask) {
+    const index = appState.tasks.findIndex(t => t.id === appState.editingTask.id);
+    appState.tasks[index] = { ...appState.editingTask, ...taskData };
+    showToast('Task updated successfully!');
+  } else {
+    const newTask = {
+      id: Date.now(),
+      ...taskData
+    };
+    appState.tasks.push(newTask);
+    showToast('Task created successfully!');
+  }
+  
+  closeTaskModal();
+  renderTasks();
+  renderDashboard();
+  renderSchedule();
+}
+
+function editTask(taskId) {
+  const task = appState.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  
+  appState.editingTask = task;
+  document.getElementById('taskModalTitle').textContent = 'Edit Task';
+  
+  // Populate form
+  document.getElementById('taskTitle').value = task.title;
+  document.getElementById('taskDescription').value = task.description;
+  document.getElementById('taskPriority').value = task.priority;
+  document.getElementById('taskStatus').value = task.status;
+  document.getElementById('taskAssignedTo').value = task.assigned_to;
+  document.getElementById('taskDueDate').value = task.due_date;
+  
+  // Populate project dropdown
+  const projectSelect = document.getElementById('taskProject');
+  projectSelect.innerHTML = appState.projects.map(p => 
+    `<option value="${p.id}" ${p.id === task.project_id ? 'selected' : ''}>${p.name}</option>`
+  ).join('');
+  
+  document.getElementById('taskModal').classList.add('active');
+}
+
+function deleteTask(taskId) {
+  if (confirm('Are you sure you want to delete this task?')) {
+    appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+    showToast('Task deleted successfully!');
+    renderTasks();
+    renderDashboard();
+  }
+}
+
+function toggleTaskStatus(taskId) {
+  const task = appState.tasks.find(t => t.id === taskId);
+  if (task) {
+    task.status = 'Done';
+    showToast('Task marked as complete!');
+    renderTasks();
+    renderDashboard();
+  }
+}
+
+// Utility Functions
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+function showForgotPassword(e) {
+  e.preventDefault();
+  showToast('Password reset link would be sent to your email');
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializeApp);
